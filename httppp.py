@@ -43,4 +43,4 @@ def delete_item(item_id):
     return jsonify({'message': 'Item deleted'})
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5005)
+    app.run(debug=True, port=5005, host="147.228.173.15")

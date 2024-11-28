@@ -1,10 +1,9 @@
 
-import module
-lan = module.get(module.LANBASE)
+import urequests
 
 setScreenColor(0x000000)
 
-
+base_url = 'http://sulis15.zcu.cz:5005/'
 
 
 id_n = 1
@@ -61,7 +60,12 @@ def id_ok():
 
 def check_valid_id():
   global id_n
-  req = lan.http_request(method='POST', url='http://sulis15.zcu.cz:5005/register_id',json={'id':id_n}, headers={})
+  req = urequests.request(
+    method='POST', 
+    url=base_url + 'register_id',
+    json={'id_n':id_n}, 
+    headers={'Content-Type':'text/json'}
+    )
   if req.text == 'OK':
     return True
   else:

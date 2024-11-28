@@ -13,6 +13,7 @@ def id_minus():
   global id_l
   global id_err
   id_err.hide()
+  id_err.setText("X")
   if id_n > 1:
     id_n = id_n - 1
     id_l.setText(str(id_n))
@@ -29,6 +30,7 @@ def id_plus():
   global id_n
   global id_l
   id_err.hide()
+  id_err.setText("X")
   if id_n < 9999:
     id_n = id_n + 1
     id_l.setText(str(id_n))

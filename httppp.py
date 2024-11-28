@@ -8,7 +8,7 @@ reg = set()
 @app.route('/register_id', methods=['POST'])
 def register_id():
     data = request.json
-    if data["id_n"] in data:
+    if data["id_n"] in reg:
         return "ID already taken"
     reg.add(data['id_n'])
     return "OK"

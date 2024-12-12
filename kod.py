@@ -219,13 +219,13 @@ def show_results():
     global res_parsed
     global res_count
     null_content()
-    btnB.wasPressed(nothing)
+    btnB.wasPressed(go_back)
     btnC.wasPressed(next_page_results)
     btnA.wasPressed(prev_page_results)
     tmp_list = []
     for i in range(1, len(results)):
         tmp_list.append(results[i])
-        if len(tmp_list) == 9:
+        if len(tmp_list) == 8:
           res_parsed.append(tmp_list)
           tmp_list = []
           res_count += 1
@@ -244,6 +244,21 @@ def render_results(i):
     for j, l in enumerate(res_parsed[i]):
       contents[j + 2].setText(l)
 
+
+def go_back():
+  global stage
+  global res_parsed
+  global showing
+  global res_count
+  
+  res_parsed = []
+  stage = 1
+  res_count = 0
+  showing = False
+  
+  null_content()
+  hide_content()
+  
 
 
 def next_page_results():
@@ -329,7 +344,7 @@ while True:
         btnC.wasPressed(id_plus)
         btnB.wasPressed(id_ok)
 
-    if stage == 1 and shown == 0:
+    if stage == 1 and (shown == 0 or shown == 4):
         btnA.wasPressed(nothing)
         btnC.wasPressed(nothing)
         btnB.wasPressed(nothing)

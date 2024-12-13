@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hlasovaci Zarizeni</title>
+</head>
+<body>
+    <h1>Nová otázka</h1>
+    
+    <form method="POST" action="/">
+        <label for="input1">Otázka:</label>
+        <input type="text" id="input1" name="Q" required>
+        <br>
+        <label for="inputc">Čas?:</label>
+        <input type="number" id="inputc" name="CS" required>
+        <br><br>
+        <label for="input2">Odpověd A:</label>
+        <input type="text" id="input2" name="A_A">
+        <input type="radio" id="radio2" name="correct_answer" value="A" required>
+        <label for="radio2">Správná?</label><br><br>
+        
+        <label for="input3">Odpověd B:</label>
+        <input type="text" id="input3" name="A_B">
+        <input type="radio" id="radio3" name="correct_answer" value="B" required>
+        <label for="radio3">Správná?</label><br><br>
+        
+        <label for="input4">Odpověd C:</label>
+        <input type="text" id="input4" name="A_C">
+        <input type="radio" id="radio4" name="correct_answer" value="C" required>
+        <label for="radio4">Správná?</label><br><br>
+        
+        <button type="submit">Potvrdit</button>
+    </form>
+    
+
+    <p>{{ display_text }}</p>
+</body>
+</html>

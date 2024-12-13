@@ -5,7 +5,7 @@ from m5ui import *
 from uiflow import *
 
 setScreenColor(0x000000)
-MAX_LEN = len("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
+MAX_LEN = len("AAAAAAAAAAAAAAAAAAAAAA")
 UDP_IP = "192.168.244.15"
 UDP_PORT = 558
 addr = (UDP_IP, UDP_PORT)
@@ -17,22 +17,22 @@ def send_message(message):
   global udpsocket
   udpsocket.send(message)
 
-def receive_message():
+def recieve_message():
   global udpsocket
   data = udpsocket.recv(1024)
   return data.decode()
 
 send_message("get_ip:;:0")
-ip = receive_message()
+ip = recieve_message()
 MY_IP = ip
 MY_PORT = 559
 MY_ADDR = (MY_IP, MY_PORT)
 udpsocketserver = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 udpsocketserver.bind(MY_ADDR)
 
-def recieve_message_server():
+def recieve_message_server(size=1024):
   global udpsocketserver
-  data = udpsocketserver.recv(1024)
+  data = udpsocketserver.recv(size)
   return data.decode()
 
 id_n = 1
@@ -94,30 +94,22 @@ def id_ok():
 def check_valid_id():
   global id_n
   send_message("register_id:;:" + str(id_n))
-  response = receive_message()
+  response = recieve_message_server()
   if response == "valid":
     return True
   else:
     return response
 
 def handle_data(data):
-  global stage
-  global question
-  global answers
-  if ":" in data:
+    global stage
+    global question
+    global answers
     s_data = data.split(":;:")
-    type_d = s_data[0]
-    content = s_data[1]
-  else:
-    type_d = data
-  if type_d == "alive":
-    send_message("alive")
-  if type_d == "question":
-    data_q = content.split(";")
-    question = data_q[0]
-    answers = data_q[1:]
+    question = s_data[1]
+    answers = s_data[2:]
     stage = 2
-    send_message("ok")
+    send_message("ack_q:;:" + str(id_n))
+    
 def prev_page():
   global curr_ans_i
   global curr_ans
@@ -139,7 +131,14 @@ def confirm_answer():
     global curr_ans_i
     global curr_ans
     global stage
-    send_message("answer:;:" + str(id_n) + ";" + curr_ans)
+    global timing
+    timing = False
+    if curr_ans == "Question":
+        return
+    if curr_ans == "Err":
+        curr_ans = "A"      
+        curr_ans_i = 1
+    send_message("answer:;:" + str(id_n) + ":;:" + curr_ans)
     stage = 3
     state.setTitle('ID: ' + str(id_n) + "                    Answered")
     hide_content()
@@ -154,18 +153,23 @@ def data_to_lines(data):
     temp_temp_line = ""
     if len(data) < MAX_LEN:
         return [data]
-
-    for i in range(len(split_data)):
+    i = 0
+    while True:
+        if i == len(split_data):
+            break
+        
         temp_temp_line += split_data[i] + " "
         if len(temp_line) > MAX_LEN:
             lines.append(temp_line)
             temp_line = ""
             temp_temp_line = "" 
-
+            i -= 1
         else:
             temp_line = temp_temp_line
+        i += 1
     lines.append(temp_line)
     return lines
+        
 
 
 def render_question(j):
@@ -186,7 +190,7 @@ def render_question(j):
       contents[i].setText(line)
 
   show_content()
-  state.setTitle('ID: ' + str(id_n) + "                            " + curr_ans)
+  state.setTitle('ID: ' + str(id_n) + "                  " + curr_ans)
 
       
 
@@ -207,10 +211,8 @@ def null_content(from_i = 0, to_i = 11):
 
 
 def get_status():
-  return "1/2"
-  """
-  send_message("status")
-  return receive_message()"""
+  data = recieve_message_server()
+  return data
 
 def show_results():
     global contents
@@ -219,19 +221,20 @@ def show_results():
     global res_parsed
     global res_count
     null_content()
-    btnB.wasPressed(go_back)
-    btnC.wasPressed(next_page_results)
-    btnA.wasPressed(prev_page_results)
+
     tmp_list = []
     for i in range(1, len(results)):
-        tmp_list.append(results[i])
-        if len(tmp_list) == 8:
+        tmp_list.append(results[i].replace("X", "............"))
+        if len(tmp_list) == 7:
           res_parsed.append(tmp_list)
           tmp_list = []
           res_count += 1
-  
+    if len(tmp_list) > 0:
+      res_parsed.append(tmp_list)
+      res_count += 1
     
-    contents[0].setText("Correct answer: " + results[0] + "  Your answer: " + curr_ans)
+
+    contents[0].setText("Answers: Correct: " + results[0] + " Your: " + curr_ans)
     contents[1].setText("Rank: ID ............ Time")
     render_results(0)
     show_content()
@@ -250,11 +253,16 @@ def go_back():
   global res_parsed
   global showing
   global res_count
+  global curr_ans
+  global curr_ans_i
   
   res_parsed = []
   stage = 1
   res_count = 0
   showing = False
+  curr_ans = ans_l[0]
+  curr_ans_i = 0
+  state.setTitle('ID: ' + str(id_n) + "                      Waiting...")
   
   null_content()
   hide_content()
@@ -282,6 +290,17 @@ def prev_page_results():
     curr_res = curr_res - 1
     render_results(curr_res)
 
+
+def get_time():
+  send_message("time")
+  data = recieve_message_server()
+  return data
+
+def get_results():
+  send_message("results:;:" + str(id_n))
+  data = recieve_message_server(1400)
+  return data
+
 #Stage 0
 id_l = M5TextBox(137, 84, "1", lcd.FONT_DejaVu72, 0xFFFFFF, rotate=0)
 plus = M5TextBox(224, 198, "+", lcd.FONT_DejaVu40, 0xFFFFFF, rotate=0)
@@ -306,12 +325,14 @@ info.hide()
 #Stage 2
 contents = []
 for i in range(11):
-  contents.append(M5TextBox(0, 30 + i * 20, " ", lcd.FONT_Default, 0xFFFFFF, rotate=0))
-ans_l = ["Q", "A", "B", "C"]
+  contents.append(M5TextBox(0, 30 + i * 20, " ", lcd.FONT_DejaVu18, 0xFFFFFF, rotate=0))
+ans_l = ["Question", "A", "B", "C"]
 answers = []
 question = ""
 curr_ans = ans_l[0]
 curr_ans_i = 0
+timet = M5TextBox(253, 22, "0:00", lcd.FONT_Default, 0xFFFFFF, rotate=0)
+timet.hide()
 #Stage 2
 
 #Stage 3
@@ -332,7 +353,7 @@ curr_res = 0
 stage = 0
 shown = 0
 showing = False
-
+timing = False
 while True:
     if stage == 0:
         id_l.show()
@@ -345,6 +366,7 @@ while True:
         btnB.wasPressed(id_ok)
 
     if stage == 1 and (shown == 0 or shown == 4):
+        id_err.hide()
         btnA.wasPressed(nothing)
         btnC.wasPressed(nothing)
         btnB.wasPressed(nothing)
@@ -352,12 +374,9 @@ while True:
         state.show()
         info.show()
         state.setTitle('ID: ' + str(id_n) + "                      Waiting...")
-        data = "question:;:What is the capital of France?capital of France?What is the capital of France?;Paris;London;Berlin;Madrid"   
-        #recieve_message_server()
+        data = recieve_message_server() 
         handle_data(data)
-        send_message(question)
-        for i in answers:
-            send_message(i)
+
         
 
     if stage == 2 and shown == 1:
@@ -367,13 +386,16 @@ while True:
         shown = 2
         info.hide()
         render_question(0)
+        timet.show()
+        timing = True
 
-    if stage == 3 and shown == 2:
+    if stage == 3:
         shown = 3
         ans.setText("Answered: " + curr_ans)
+        timet.hide()
         ans.show()
         user_info.show()
-        status_ans = "done"
+        status_ans = get_status()
         if status_ans == "done":
             stage = 4
             wait_ms(1000)
@@ -389,12 +411,22 @@ while True:
       shown = 4
       state.setTitle('ID: ' + str(id_n) + "                    Results")
       if not showing:
-        results = "A; 1.: 7 ............ 1:13; 2.: 9 ............1:15; 3.: 10 ............1:17; 4.: 11 ............1:19; 5.: 12 ............1:21; 6.: 13 ............1:23; 7.: 14 ............1:25; 8.: 15 ............1:27; 9.: 16 ............1:29; 10.: 17 ............1:31; 11.: 18 ............1:33; 12.: 19 ............1:35; 13.: 20 ............1:37; 14.: 21 ............1:39; 15.: 22 ............1:41; 16.: 23 ............1:43; 17.: 24 ............1:45; 18.: 25 ............1:47; 19.: 26 ............1:49; 20.: 27 ............1:51; 21.: 28 ............1:53; 22.: 29 ............1:55; 23.: 30 ............1:57; 24.: 31 ............1:59; 25.: 32 ............2:01; 26.: 33 ............2:03; 27.: 34 ............2:05; 28.: 35 ............2:07; 29.: 36 ............2:09; 30.: 37 ............2:11; 31.: 38 ............2:13; 32.: 39 ............2:15; 33.: 40 ............2:17; 34.: 41 ............2:19; 35.: 42 ............2:21; 36.: 43 ............2:23; 37.: 44 ............2:25; 38.: 45 ............2:27; 39.: 46 ............2:29; 40.: 47 ............2:31; 41.: 48 ............2:33; 42.: 49 ............2:35; 43.: 50 ............2:37; 44.: 51 ............2:39; 45.: 52 ............2:41; 46.: 53 ............2:43; 47.: 54 ............2:45"
+        btnB.wasPressed(go_back)
+        btnC.wasPressed(next_page_results)
+        btnA.wasPressed(prev_page_results)
+        results = get_results()
+        send_message(results)
         results = results.split(";")
         show_results()
         showing = True
 
       
+    if timing:
+      times = get_time()
+      if times == "END":
+        curr_ans = "Err"
+        confirm_answer()
+      timet.setText(times)
 
-    wait_ms(5)
+    wait_ms(750)
   

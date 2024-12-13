@@ -136,7 +136,7 @@ def confirm_answer():
     if curr_ans == "Question":
         return
     if curr_ans == "Err":
-        curr_ans = "A"      
+        curr_ans = "F"      
         curr_ans_i = 1
     send_message("answer:;:" + str(id_n) + ":;:" + curr_ans)
     stage = 3
@@ -263,6 +263,10 @@ def go_back():
   curr_ans = ans_l[0]
   curr_ans_i = 0
   state.setTitle('ID: ' + str(id_n) + "                      Waiting...")
+  plus.hide()
+  minus.hide()
+  ok.hide()
+  
   
   null_content()
   hide_content()
@@ -304,7 +308,7 @@ def get_results():
 #Stage 0
 id_l = M5TextBox(137, 84, "1", lcd.FONT_DejaVu72, 0xFFFFFF, rotate=0)
 plus = M5TextBox(224, 198, "+", lcd.FONT_DejaVu40, 0xFFFFFF, rotate=0)
-minus = M5TextBox(58, 198, "-", lcd.FONT_DejaVu40, 0xFFFFFF, rotate=0)
+minus = M5TextBox(50, 198, "-", lcd.FONT_DejaVu40, 0xFFFFFF, rotate=0)
 ok = M5TextBox(138, 206, "ok", lcd.FONT_DejaVu24, 0xFFFFFF, rotate=0)
 id_err = M5TextBox(55, 28, "X", lcd.FONT_DejaVu24, 0xff0000, rotate=0)
 
@@ -380,6 +384,11 @@ while True:
         
 
     if stage == 2 and shown == 1:
+        plus.setText("->")
+        minus.setText("<-")
+        plus.show()
+        minus.show()
+        ok.show()
         btnA.wasPressed(prev_page)
         btnC.wasPressed(next_page)
         btnB.wasPressed(confirm_answer)
@@ -390,24 +399,34 @@ while True:
         timing = True
 
     if stage == 3:
-        shown = 3
-        ans.setText("Answered: " + curr_ans)
-        timet.hide()
-        ans.show()
-        user_info.show()
-        status_ans = get_status()
-        if status_ans == "done":
-            stage = 4
-            wait_ms(1000)
-            ans.hide()
-            user_info.hide()
-            count_dev.hide()
-            status_label.hide()
-        else:
-            count_dev.setText(status_ans)
-            count_dev.show()
-            status_label.show()
+      btnA.wasPressed(nothing)
+      btnC.wasPressed(nothing)
+      btnB.wasPressed(nothing)
+      plus.hide()
+      minus.hide()
+      ok.hide()
+      shown = 3
+      ans.setText("Answered: " + curr_ans)
+      timet.hide()
+      ans.show()
+      user_info.show()
+      status_ans = get_status()
+      if status_ans == "done":
+          stage = 4
+          wait_ms(1000)
+          ans.hide()
+          user_info.hide()
+          count_dev.hide()
+          status_label.hide()
+      else:
+          count_dev.setText(status_ans)
+          count_dev.show()
+          status_label.show()
     if stage == 4 and shown == 3:
+      ok.setText("Back")
+      ok.show()
+      plus.show()
+      minus.show()
       shown = 4
       state.setTitle('ID: ' + str(id_n) + "                    Results")
       if not showing:
@@ -415,7 +434,6 @@ while True:
         btnC.wasPressed(next_page_results)
         btnA.wasPressed(prev_page_results)
         results = get_results()
-        send_message(results)
         results = results.split(";")
         show_results()
         showing = True
@@ -428,5 +446,5 @@ while True:
         confirm_answer()
       timet.setText(times)
 
-    wait_ms(750)
+    wait_ms(500)
   

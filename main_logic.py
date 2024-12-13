@@ -162,6 +162,7 @@ while True:
         elif spl[0] == "results":
             curr_devices = get_curr_device_state()
             results = make_results()
+            redis_client.set("results", results)
             for d in curr_devices:
                 redis_client.lpush("send_queue", json.dumps({"device_ip": curr_devices[d]["ip"], "device_port": 559, "message": results}))
         

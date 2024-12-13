@@ -9,10 +9,11 @@ app = Flask(__name__)
 # Global variable to store the text
 display_text = "Default Text"
 
-UDP_IP = "127.0.0.1"
+UDP_IP = "192.168.244.15"
 UDP_PORT = 1470
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # UDP
+sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 sock.bind((UDP_IP, UDP_PORT))
 
 # Redis client
@@ -22,19 +23,19 @@ def check_redis_for_updates():
     global display_text
     last_text = None
     while True:
-        new_text = redis_client.get('display_text')
+        new_text = redis_client.get('results')
         if new_text and new_text != last_text:
             tmp = ""
             print(f"New text: {new_text}")
+            last_text = new_text
             new_text = (new_text.decode('utf-8')).split(";")
-            tmp += f"Správná odpověd byla: {new_text[0]}\n"
+            tmp += f"Správná odpověd byla: {new_text[0]}<br>"
             for i in range(1, len(new_text)):
-                tmp += f"{new_text[i].replace('X', '..............')}\n"
+                tmp += f"{new_text[i].replace('X', '..............')}<br>"
             
             
             display_text = tmp            
             
-            last_text = new_text
             
         time.sleep(5)  # Check every 5 seconds
 
